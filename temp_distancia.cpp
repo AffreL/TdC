@@ -10,7 +10,8 @@ const int Trigger = 2;   //Pin digital 2 para el Trigger del sensor
 const int Echo = 4;   //Pin digital 3 para el Echo del sensor
 const int Buzzer = 6; // 
 
- 
+long valor;
+
 // Inicializamos el sensor DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -35,6 +36,8 @@ void loop()
   digitalWrite(Trigger, HIGH);
   delayMicroseconds(10);          //Enviamos un pulso de 10us
   digitalWrite(Trigger, LOW);
+
+  valor = analogRead(A0);
   
   t = pulseIn(Echo, HIGH); //obtenemos el ancho del pulso
   d = t/59;             //escalamos el tiempo a una distancia en cm
@@ -44,7 +47,10 @@ void loop()
   Serial.print("cm");
   Serial.println();
 
-  if(d <= 20){
+  Serial.print("Valor de Umbral: ");
+  Serial.println(valor/10);
+
+  if(d <= valor/10){
     digitalWrite(Buzzer, HIGH);
   }
   else{
@@ -69,19 +75,19 @@ void loop()
   // Calcular el índice de calor en grados centígrados
   float hic = dht.computeHeatIndex(t_temp, h, false);
  
-  Serial.print("Humedad: ");
-  Serial.print(h);
-  Serial.print(" %\t");
-  Serial.print("Temperatura: ");
-  Serial.print(t_temp);
-  Serial.print(" *C ");
-  Serial.print(f);
-  Serial.print(" *F\t");
-  Serial.print("Índice de calor: ");
-  Serial.print(hic);
-  Serial.print(" *C ");
-  Serial.print(hif);
-  Serial.println(" *F");
-      // Esperamos 5 segundos entre medidas
+  //Serial.print("Humedad: ");
+  //Serial.print(h);
+  //Serial.print(" %\t");
+  //Serial.print("Temperatura: ");
+  //Serial.print(t_temp);
+  //Serial.print(" *C ");
+  //Serial.print(f);
+  //Serial.print(" *F\t");
+  //Serial.print("Índice de calor: ");
+  //Serial.print(hic);
+  //Serial.print(" *C ");
+  //Serial.print(hif);
+  //Serial.println(" *F");
+  //    // Esperamos 5 segundos entre medidas
   delay(1000);
 }
