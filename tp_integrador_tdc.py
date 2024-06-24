@@ -72,26 +72,26 @@ def calc_response(t, mode, xm, xc):
     if mode == 0:
         op[100:] = 0.5  # Valor de control manual
 
-    op_hi = 1.0
-    op_lo = 0.0
-    ndelay = int(np.ceil(thetap / delta_t))
+    op_hi = 1.0  # Límite superior de la señal de control
+    op_lo = 0.0  # Límite inferior de la señal de control
+    ndelay = int(np.ceil(thetap / delta_t))  # Número de pasos de retardo
 
     for i in range(0, ns):
         e[i] = sp[i] - (pv[i] - ambient_light[i])  # Error basado en el brillo relativo
         if i >= 1:
-            dpv[i] = (pv[i] - pv[i-1]) / delta_t
-            ie[i] = ie[i-1] + e[i] * delta_t
-        P[i] = Kc * e[i]
-        I[i] = Kc / tauI * ie[i]
-        D[i] = -Kc * tauD * dpv[i]
+            dpv[i] = (pv[i] - pv[i-1]) / delta_t  # Derivada de la variable del proceso
+            ie[i] = ie[i-1] + e[i] * delta_t      # Integral del error
+        P[i] = Kc * e[i]        # Componente proporcional
+        I[i] = Kc / tauI * ie[i]# Componente integral
+        D[i] = -Kc * tauD * dpv[i]  # Componente derivativa
         if mode == 1:
-            op[i] = op[0] + P[i] + I[i] + D[i]
+            op[i] = op[0] + P[i] + I[i] + D[i] # Señal de control en modo automático
         if op[i] > op_hi:
             op[i] = op_hi
-            ie[i] -= e[i] * delta_t
+            ie[i] -= e[i] * delta_t # Anti-reset windup
         if op[i] < op_lo:
             op[i] = op_lo
-            ie[i] -= e[i] * delta_t
+            ie[i] -= e[i] * delta_t # Anti-reset windup
         iop = max(0, i - ndelay)
         y = odeint(process, pv[i], [0, delta_t], args=(op[iop], Kp, taup))
         pv[i+1] = y[-1]
@@ -100,7 +100,7 @@ def calc_response(t, mode, xm, xc):
     P[ns] = P[ns-1]
     I[ns] = I[ns-1]
     D[ns] = D[ns-1]
-    return (pv, op, e)  # Ahora también retornamos el error
+    return (pv, op, e)  # Retornar brillo de la pantalla, señal de control y error
 
 def plot_response(n, mode, t, pv, op, sp, e):
     plt.figure(n)
