@@ -140,6 +140,12 @@ pid.tauI = 5.0
 pid.tauD = 0.1
 
 (pv, op, e) = calc_response(t, model, pid)
-plot_response(2, t, pv, op, sp, e)
+plot_response("Impulso", t, pv, op, sp, e)
+
+ambient_light = np.zeros(ns+1)
+ambient_light[300:900] = np.linspace(0, 0.4, 600)   # Un rayo de luz aumenta el brillo percibido (Caso de Rampa)
+
+(pv, op, e) = calc_response(t, model, pid)
+plot_response("Rampa", t, pv, op, sp, e)
 
 plt.show()
