@@ -7,9 +7,6 @@ ns = 1200
 # Puntos de tiempo
 t = np.linspace(0, ns, ns+1)
 
-# Definición del modo (manual=0, automático=1)
-mode = 1
-
 class model(object):
     # Modelo de la pantalla
     Kp = 1.0      # Ganancia del proceso
@@ -19,20 +16,20 @@ class model(object):
 class pid(object):
     # Tuning PID
     Kc = 2.0      # Ganancia proporcional
-    tauI = 10.0   # Tiempo integral
-    tauD = 0.0    # Tiempo derivativo
+    tauI = 5.0   # Tiempo integral
+    tauD = 0.1    # Tiempo derivativo
     sp = []       # Set Point (punto de ajuste)
 
 # Definir el Set Point
 sp = np.zeros(ns+1)
-sp[50:600] = 0.5  # Objetivo de brillo relativo del 80% en una escala de 0 a 1
-sp[600:1000] = 0.5    # Cambio a brillo relativo del 50%
+sp[50:1000] = 0.5  # Objetivo de brillo relativo del 50% en una escala de 0 a 1
 sp[1000:] = 0
 pid.sp = sp
 
 # Perturbación de luz ambiental
 ambient_light = np.zeros(ns+1)
-ambient_light[300:900] = 0.4  # Un rayo de luz aumenta el brillo percibido
+ambient_light[300:900] = 0.4
+                            #np.linspace(0, 0.4, 600)   # Un rayo de luz aumenta el brillo percibido (Caso de Rampa)
 
 def process(L, t, u, Kp, taup):
     # Modelo del proceso para el control del brillo de la pantalla
@@ -46,7 +43,7 @@ def process(L, t, u, Kp, taup):
     dLdt = -L/taup + Kp/taup * u
     return dLdt
 
-def calc_response(t, mode, xm, xc):
+def calc_response(t, xm, xc):
     # Extracción de parámetros del modelo y del PID
     Kp = xm.Kp
     taup = xm.taup
@@ -69,9 +66,6 @@ def calc_response(t, mode, xm, xc):
     D = np.zeros(ns+1)   # Componente derivativa
 
 
-    if mode == 0:
-        op[100:] = 0.5  # Valor de control manual
-
     op_hi = 1.0  # Límite superior de la señal de control
     op_lo = 0.0  # Límite inferior de la señal de control
     ndelay = int(np.ceil(thetap / delta_t))  # Número de pasos de retardo
@@ -84,8 +78,7 @@ def calc_response(t, mode, xm, xc):
         P[i] = Kc * e[i]        # Componente proporcional
         I[i] = Kc / tauI * ie[i]# Componente integral
         D[i] = -Kc * tauD * dpv[i]  # Componente derivativa
-        if mode == 1:
-            op[i] = op[0] + P[i] + I[i] + D[i] # Señal de control en modo automático
+        op[i] = op[0] + P[i] + I[i] + D[i] # Señal de control en modo automático
         if op[i] > op_hi:
             op[i] = op_hi
             ie[i] -= e[i] * delta_t # Anti-reset windup
@@ -102,13 +95,13 @@ def calc_response(t, mode, xm, xc):
     D[ns] = D[ns-1]
     return (pv, op, e)  # Retornar brillo de la pantalla, señal de control y error
 
-def plot_response(n, mode, t, pv, op, sp, e):
+def plot_response(n, t, pv, op, sp, e):
     plt.figure(n)
 
     # Gráfico del Set Point y la Variable del Proceso
     plt.subplot(5, 1, 1)
-    if mode == 1:
-        plt.plot(t, sp, 'k-', linewidth=2, label='Set Point (SP)')
+    
+    plt.plot(t, sp, 'k-', linewidth=2, label='Set Point (SP)')
     plt.plot(t, pv - ambient_light, 'b--', linewidth=3, label='Brillo Relativo (PV - Luz Ambiente)')
     plt.legend(loc='best')
     plt.ylabel('Brillo Relativo')
@@ -140,20 +133,13 @@ def plot_response(n, mode, t, pv, op, sp, e):
 
     plt.tight_layout()
 
-# Simulación en modo manual
-#model.Kp = 1.0
-#model.taup = 5.0
-#model.thetap = 0.5
-#mode = 0
-#(pv, op, e) = calc_response(t, mode, model, pid)
-#plot_response(1, mode, t, pv, op, sp, e)
 
 # Simulación en modo PID
 pid.Kc = 2.0
 pid.tauI = 5.0
-pid.tauD = 0.0
-mode = 1
-(pv, op, e) = calc_response(t, mode, model, pid)
-plot_response(2, mode, t, pv, op, sp, e)
+pid.tauD = 0.1
+
+(pv, op, e) = calc_response(t, model, pid)
+plot_response(2, t, pv, op, sp, e)
 
 plt.show()
