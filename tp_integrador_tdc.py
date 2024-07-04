@@ -148,4 +148,10 @@ ambient_light[300:900] = np.linspace(0, 0.4, 600)   # Un rayo de luz aumenta el 
 (pv, op, e) = calc_response(t, model, pid)
 plot_response("Rampa", t, pv, op, sp, e)
 
+ambient_light = np.zeros(ns+1)
+ambient_light[300:900] = 0.8 #Dada para falla.
+
+(pv, op, e) = calc_response(t, model, pid)
+plot_response("Falla", t, pv, op, sp, e)
+
 plt.show()
