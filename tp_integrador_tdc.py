@@ -15,7 +15,7 @@ class model(object):
 
 class pid(object):
     # Tuning PID
-    Kc = 2.0      # Ganancia proporcional
+    Kc = 20.0      # Ganancia proporcional
     tauI = 5.0   # Tiempo integral
     tauD = 0.1    # Tiempo derivativo
     sp = []       # Set Point (punto de ajuste)
@@ -135,12 +135,9 @@ def plot_response(n, t, pv, op, sp, e):
 
 
 # Simulación en modo PID
-pid.Kc = 2.0
-pid.tauI = 5.0
-pid.tauD = 0.1
-
-(pv, op, e) = calc_response(t, model, pid)
-plot_response("Impulso", t, pv, op, sp, e)
+pid.Kc = 1.5
+pid.tauI = 8.0
+pid.tauD = 1.0
 
 ambient_light = np.zeros(ns+1)
 ambient_light[300:900] = np.linspace(0, 0.4, 600)   # Un rayo de luz aumenta el brillo percibido (Caso de Rampa)
@@ -149,9 +146,24 @@ ambient_light[300:900] = np.linspace(0, 0.4, 600)   # Un rayo de luz aumenta el 
 plot_response("Rampa", t, pv, op, sp, e)
 
 ambient_light = np.zeros(ns+1)
-ambient_light[300:900] = 0.8 #Dada para falla.
+ambient_light[300:900] = 0.8  #Dada para falla.
 
 (pv, op, e) = calc_response(t, model, pid)
 plot_response("Falla", t, pv, op, sp, e)
+
+# Número de pasos de simulación
+ns = 100
+# Puntos de tiempo
+t = np.linspace(0, ns, ns+1)
+
+# Definir el Set Point
+sp = np.zeros(ns+1)
+sp[50:100] = 0.5  # Objetivo de brillo relativo del 50% en una escala de 0 a 1
+pid.sp = sp
+# Perturbación de luz ambiental
+ambient_light = np.zeros(ns+1)
+
+(pv, op, e) = calc_response(t, model, pid)
+plot_response("Estado Transitorio", t, pv, op, sp, e)
 
 plt.show()
